@@ -6,6 +6,7 @@ import java.util.Random;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
 import com.bolsadeideas.springboot.backend.chat.models.documents.Mensaje;
@@ -18,6 +19,9 @@ public class ChatController {
 	
 	@Autowired
 	private ChatService chatService;
+	
+	@Autowired
+	private SimpMessagingTemplate webSocket;
 
 	@MessageMapping("/mensaje") //Para publicar mensaje /app/mensaje (se debe agregar el /app configurado en WebSocketConfig)
 	@SendTo("/chat/mensaje") //Para enviar el objeto mensaje
@@ -38,6 +42,11 @@ public class ChatController {
 	@SendTo("/chat/escribiendo")
 	public String estaEscribiendo(String username) {
 		return username.concat(" está escribiendo...");
+	}
+	
+	@MessageMapping("/historial")
+	public void historial(String clienteId) {
+		this.webSocket.convertAndSend("/chat/historial/" + clienteId, this.chatService.obtenerUltimos10Mensajes());
 	}
 
 }
